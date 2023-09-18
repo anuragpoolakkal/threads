@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					<main className="flex flex-row">
 						<LeftSidebar />
 						<section className="main-container">
-							<div className="w-fill max-w-4xl">{children}</div>
+							<div className="w-full max-w-4xl">{children}</div>
 						</section>
 						<RightSidebar />
 					</main>
