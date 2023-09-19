@@ -42,3 +42,28 @@ export async function createThread({ text, author, communityId, path }: Params) 
 		throw new Error(`Failed to create thread: ${error.message}`);
 	}
 }
+
+export async function fetchPosts(pageNumber = 1, pageSize = 20) {
+	connectToDB();
+
+	// calculate number of posts to skip based om page number and page size
+	const skipAmount = (pageNumber - 1) * pageSize;
+
+	// create query to fetch posts that have mo parent (top-level threads / threads that are not comments)
+	const postQuery = Thread.find({ parentId: { $in: [null, undefined] } })
+		.sort({ createdAt: "desc" })
+		.skip(skipAmount)
+		.limit(pageSize)
+		.populate({ path: "author", model: User })
+		.populate({ path: "community", model: Community })
+		.populate({ path: "children", populate: { path: "author", model: User, select: "_id name parentId image" } }); // select only _id and username fileds of author
+
+	// total number of top-level threads
+	const totalPostCount = await Thread.countDocuments({ parentId: { $in: [null, undefined] } });
+
+	const posts = await postQuery.exec();
+
+	const isNext = totalPostCount > skipAmount + posts.length;
+
+	return { posts, isNext };
+}
