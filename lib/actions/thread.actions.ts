@@ -67,3 +67,72 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
 
 	return { posts, isNext };
 }
+
+export async function fetchThreadById(threadId: string) {
+	connectToDB();
+
+	try {
+		const thread = await Thread.findById(threadId)
+			.populate({
+				path: "author",
+				model: User,
+				select: "_id id name username image",
+			}) // populate author field with _id and username
+			.populate({
+				path: "community",
+				model: Community,
+				select: "_id id name image",
+			}) // populate community field with _id and name
+			.populate({
+				path: "children", // populate children field
+				populate: [
+					{
+						path: "author", // populate the author field within children
+						model: User,
+						select: "_id id name username parentId image", // select only _id and username fields of the author
+					},
+					{
+						path: "children", // populate the children field within children
+						model: Thread, // the model of the nested children (assuming it's the same "Thread" model)
+						populate: {
+							path: "author", // populate the author field within nested children
+							model: User,
+							select: "_id id name parentId image", // select only _id and username fields of the author
+						},
+					},
+				],
+			});
+		return thread;
+	} catch (error) {
+		console.error("Error while fetching thread:", error);
+		throw new Error("Unable to fetch thread");
+	}
+}
+
+export async function addCommentToThread(threadId: string, commentText: string, userId: string, path: string) {
+	try {
+		connectToDB();
+
+		// find the original thread by its id
+		const originalThread = await Thread.findById(threadId);
+
+		if (!originalThread) throw new Error("Thread not found");
+
+		// create new comment thread
+		const commentThread = new Thread({ text: commentText, author: userId, parentId: threadId }); // parentId is original thread's id
+
+		// save the comment thread to the database
+		const savedCommentThread = await commentThread.save();
+
+		// add the comment thread's id to the original thread's children array
+		originalThread.children.push(savedCommentThread._id);
+
+		// save the updated original thread to the database
+		await originalThread.save();
+
+		revalidatePath(path);
+	} catch (err) {
+		console.error("Error while adding comment:", err);
+		throw new Error("Unable to add comment");
+	}
+}
