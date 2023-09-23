@@ -11,7 +11,7 @@ interface Props {
 	content: string;
 	author: {
 		name: string;
-		username: string;
+		username?: string;
 		image: string;
 		id: string;
 	};
