@@ -28,7 +28,7 @@ const Profile = async ({ params }: { params: { id: string } }) => {
 			/>
 
 			<div className="mt-9">
-				<Tabs defaultValues="threads" className="w-full">
+				<Tabs defaultValue="threads" className="w-full">
 					<TabsList className="tabs">
 						{profileTabs.map((tab) => (
 							<TabsTrigger key={tab.label} value={tab.value} className="tab">

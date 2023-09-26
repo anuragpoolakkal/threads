@@ -7,6 +7,7 @@ interface Result {
 	name: string;
 	image: string;
 	id: string;
+	username: string;
 	threads: {
 		_id: string;
 		text: string;
@@ -58,9 +59,15 @@ async function ThreadsTab({ currentUserId, accountId, accountType }: Props) {
 					content={thread.text}
 					author={
 						accountType === "User"
-							? { name: result.name, image: result.image, id: result.id }
+							? {
+									name: result.name,
+									image: result.image,
+									id: result.id,
+									username: result.username,
+							  }
 							: {
 									name: thread.author.name,
+									username: thread.author.username,
 									image: thread.author.image,
 									id: thread.author.id,
 							  }

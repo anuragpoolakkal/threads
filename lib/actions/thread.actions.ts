@@ -136,3 +136,5 @@ export async function addCommentToThread(threadId: string, commentText: string, 
 		throw new Error("Unable to add comment");
 	}
 }
+
+export async function deleteThread(id: string, path: string): Promise<void> {}

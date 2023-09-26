@@ -22,7 +22,7 @@ const ProfileHeader = ({ accountId, authUserId, name, username, imgUrl, bio, typ
 
 					<div className="flex-1">
 						<h2 className="text-left text-heading3-bold text-light-1">{name}</h2>
-						<p className="text-base-medium text-gray-1">@{username}</p>
+						<p className="text-small-medium text-gray-1">@{username}</p>
 					</div>
 				</div>
 				{accountId === authUserId && type !== "Community" && (
