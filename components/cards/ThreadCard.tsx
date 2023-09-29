@@ -22,6 +22,7 @@ interface Props {
 	author: {
 		id: string;
 		name: string;
+		username: string;
 		image: string;
 	};
 	community: { id: string; name: string; image: string } | null;
@@ -80,6 +81,7 @@ const ThreadCard = ({
 					<div className="flex w-full flex-col">
 						<Link href={`/profile/${author.id}`} className="w-fit">
 							<h4 className="cursor-pointer text-base-semibold text-light-1">{author.name}</h4>
+							<p className="text-small-medium text-gray-1">@{author.username}</p>
 						</Link>
 
 						<p className="mt-2 text-small-regular text-light-2">{content}</p>
