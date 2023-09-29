@@ -1,5 +1,4 @@
 import ThreadCard from "@/components/cards/ThreadCard";
-import React from "react";
 import { currentUser } from "@clerk/nextjs";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";

@@ -98,23 +98,23 @@ const ThreadCard = ({
 									/>
 								</Link>
 								{/* TODO: Optional implement Repost */}
-								{/* <Image
-                  src="/repost.svg"
-                  alt="repost"
-                  width={24}
-                  height={24}
-                  className="cursor-pointer object-contain hover:scale-[1.1]"
-                  title="Repost"
-                /> */}
+								<Image
+									src="/repost.svg"
+									alt="repost"
+									width={24}
+									height={24}
+									className="cursor-pointer object-contain hover:scale-[1.1]"
+									title="Repost"
+								/>
 								{/* TODO: Optional implement Share */}
-								{/* <Image
-                  src="/share.svg"
-                  alt="share"
-                  width={24}
-                  height={24}
-                  className="cursor-pointer object-contain hover:scale-[1.1]"
-                  title="Share"
-                /> */}
+								<Image
+									src="/share.svg"
+									alt="share"
+									width={24}
+									height={24}
+									className="cursor-pointer object-contain hover:scale-[1.1]"
+									title="Share"
+								/>
 							</div>
 							{numberLiked > 0 && (
 								<p className="mt-1 text-subtle-medium text-gray-1">
