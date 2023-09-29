@@ -60,7 +60,7 @@ const Comment = ({ threadId, currentUserImg, currentUserId }: Props) => {
 							<FormControl className="border-none bg-transparent">
 								<Input
 									type="text"
-									placeholder="Comment"
+									placeholder="Write your reply"
 									className="no-focus text-light-1 outline-none"
 									{...field}
 								/>
@@ -70,7 +70,7 @@ const Comment = ({ threadId, currentUserImg, currentUserId }: Props) => {
 				/>
 
 				<Button type="submit" className="comment-form_btn">
-					Comment
+					Reply
 				</Button>
 			</form>
 		</Form>
