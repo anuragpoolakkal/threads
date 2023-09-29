@@ -1,9 +1,27 @@
 import mongoose from "mongoose";
 
 const communitySchema = new mongoose.Schema({
-	id: { type: String },
-	name: { type: String },
+	id: { type: String, required: true },
+	username: { type: String, required: true, unique: true },
+	name: { type: String, required: true },
 	image: { type: String },
+	bio: { type: String },
+	createdBy: {
+		type: mongoose.Types.ObjectId,
+		ref: "User",
+	},
+	threads: [
+		{
+			type: mongoose.Types.ObjectId,
+			ref: "Threads",
+		},
+	],
+	members: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+		},
+	],
 });
 
 const Community = mongoose.models.Community || mongoose.model("Community", communitySchema);

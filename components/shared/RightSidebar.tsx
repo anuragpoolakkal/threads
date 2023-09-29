@@ -1,4 +1,12 @@
-const RightSidebar = () => {
+import { fetchUser } from "@/lib/actions/user.actions";
+import { currentUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+
+async function RightSidebar() {
+	const user = await currentUser();
+	if (!user) return null;
+
+
 	return (
 		<section className="custom-scrollbar rightsidebar">
 			<div className="flex flex-1 flex-col justify-start">
@@ -9,5 +17,5 @@ const RightSidebar = () => {
 			</div>
 		</section>
 	);
-};
+}
 export default RightSidebar;
