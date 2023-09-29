@@ -80,6 +80,9 @@ dependencies:
   tailwindcss-animate:
     specifier: ^1.0.7
     version: 1.0.7(tailwindcss@3.3.3)
+  text-ellipsis:
+    specifier: ^1.0.3
+    version: 1.0.3
   typescript:
     specifier: 5.2.2
     version: 5.2.2
@@ -1860,6 +1863,10 @@ packages:
       sucrase: 3.34.0
     transitivePeerDependencies:
       - ts-node
+    dev: false
+
+  /text-ellipsis@1.0.3:
+    resolution: {integrity: sha512-k+qJ/Q+pMThYjniWXa6mY8IU75XZXGUXumvbmKPsO6IQckPs5wlI6TvXae5yj+MBqmPJIseGfjO/aeLWE2B1aA==}
     dev: false
 
   /thenify-all@1.6.0:
