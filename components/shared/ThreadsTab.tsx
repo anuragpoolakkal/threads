@@ -39,11 +39,13 @@ const ThreadsTab = async ({ currentUserId, accountId, userModelId, accountType }
 										name: result.name,
 										image: result.image,
 										id: result.id,
+										username: result.username,
 								  }
 								: {
 										name: thread.author.name,
 										image: thread.author.image,
 										id: thread.author.id,
+										username: result.username,
 								  }
 						}
 						community={

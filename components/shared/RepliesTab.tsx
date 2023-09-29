@@ -22,6 +22,7 @@ const RepliesTab = async ({ currentUserId, userModelId, replies }: Props) => {
 						author={{
 							name: thread.author.name,
 							image: thread.author.image,
+							username: thread.author.username,
 							id: thread.author.id,
 						}}
 						community={thread.community}
