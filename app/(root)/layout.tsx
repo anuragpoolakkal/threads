@@ -17,8 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<ClerkProvider>
-			{/* <ClerkProvider appearance={{ baseTheme: dark }}> */}
+		<ClerkProvider appearance={{ baseTheme: dark }}>
 			<html lang="en">
 				<head>
 					<link rel="icon" type="image/x-icon" href="/threads.png" sizes="any" />
