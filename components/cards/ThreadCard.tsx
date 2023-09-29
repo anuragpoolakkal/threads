@@ -1,25 +1,30 @@
+import { formatDateString } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import DeleteThread from "../forms/DeleteThread";
-import { formatDateString } from "@/lib/utils";
-// import DomParser from "dom-parser";
+import DeleteThread from "@/components/forms/DeleteThread";
+import LikeButton from "../LikeButton";
 
 interface Props {
 	id: string;
 	currentUserId: string;
+	userModelId: string;
 	parentId: string | null;
 	content: string;
+	likes: {
+		user: {
+			_id: string;
+		};
+		thread: {
+			_id: string;
+		};
+		liked: boolean;
+	}[];
 	author: {
-		name: string;
-		username: string;
-		image: string;
 		id: string;
+		name: string;
+		image: string;
 	};
-	community: {
-		id: string;
-		name: string;
-		image: string;
-	} | null;
+	community: { id: string; name: string; image: string } | null;
 	createdAt: string;
 	comments: {
 		author: {
@@ -27,94 +32,106 @@ interface Props {
 		};
 	}[];
 	isComment?: boolean;
+	linkToParent?: boolean;
 }
 
 const ThreadCard = ({
 	id,
 	currentUserId,
+	userModelId,
 	parentId,
 	content,
+	likes,
 	author,
 	community,
 	createdAt,
 	comments,
 	isComment,
+	linkToParent,
 }: Props) => {
-	// const postContent = content.replaceAll("\n", "<br />");
+	const isLiked =
+		likes &&
+		Array.isArray(likes) &&
+		likes.find((like) => {
+			return (
+				like?.user?._id.toString() === JSON.parse(userModelId) && like.thread._id.toString() === id.toString()
+			);
+		})?.liked;
 
-	// const parser = new DomParser();
-	// const htmlContent: any = parser.parseFromString(postContent);
+	const numberLiked = Array.isArray(likes) ? likes.filter((like) => like.liked).length : 0;
 
 	return (
-		<article className={`flex flex-col rounded-xl w-full ${isComment ? "px-0 xs:px-7" : "bg-dark-2 p-5"}`}>
+		<article className={`flex w-full flex-col rounded-xl ${isComment ? "px-0 xs:px-7" : "bg-dark-2 p-7"}`}>
 			<div className="flex items-start justify-between">
 				<div className="flex w-full flex-1 flex-row gap-4">
 					<div className="flex flex-col items-center">
 						<Link href={`/profile/${author.id}`} className="relative h-11 w-11">
 							<Image
 								src={author.image}
-								alt="user_community_image"
-								fill
+								alt="Profile"
+								width={44}
+								height={44}
 								className="cursor-pointer rounded-full"
 							/>
 						</Link>
-
 						<div className="thread-card_bar" />
 					</div>
 
 					<div className="flex w-full flex-col">
 						<Link href={`/profile/${author.id}`} className="w-fit">
 							<h4 className="cursor-pointer text-base-semibold text-light-1">{author.name}</h4>
-							<p className="text-small-medium text-gray-1">@{author.username}</p>
 						</Link>
 
-						<p className="mt-2 text-smaller-regular text-light-2">{content}</p>
+						<p className="mt-2 text-small-regular text-light-2">{content}</p>
 
 						<div className={`${isComment && "mb-10"} mt-5 flex flex-col gap-3`}>
 							<div className="flex gap-3.5">
-								<Image
-									src="/heart-gray.svg"
-									alt="heart"
-									width={24}
-									height={24}
-									className="cursor-pointer object-contain"
-								/>
-								<Link href={`/thread/${id}`}>
+								<LikeButton threadId={id.toString()} userId={userModelId} isLiked={isLiked || false} />
+								<Link href={`/thread/${linkToParent ? parentId : id}`}>
 									<Image
 										src="/reply.svg"
 										alt="reply"
 										width={24}
 										height={24}
-										className="cursor-pointer object-contain"
+										className="cursor-pointer object-contain hover:scale-[1.1]"
+										title="Reply"
 									/>
 								</Link>
-								<Image
-									src="/repost.svg"
-									alt="repost"
-									width={24}
-									height={24}
-									className="cursor-pointer object-contain"
-								/>
-								<Image
-									src="/share.svg"
-									alt="share"
-									width={24}
-									height={24}
-									className="cursor-pointer object-contain"
-								/>
+								{/* TODO: Optional implement Repost */}
+								{/* <Image
+                  src="/repost.svg"
+                  alt="repost"
+                  width={24}
+                  height={24}
+                  className="cursor-pointer object-contain hover:scale-[1.1]"
+                  title="Repost"
+                /> */}
+								{/* TODO: Optional implement Share */}
+								{/* <Image
+                  src="/share.svg"
+                  alt="share"
+                  width={24}
+                  height={24}
+                  className="cursor-pointer object-contain hover:scale-[1.1]"
+                  title="Share"
+                /> */}
 							</div>
+							{numberLiked > 0 && (
+								<p className="mt-1 text-subtle-medium text-gray-1">
+									{numberLiked} {numberLiked === 1 ? "like" : "likes"}
+								</p>
+							)}
 
 							{isComment && comments.length > 0 && (
-								<Link href={`/threads/${id}`}>
+								<Link href={`/thread/${id}`}>
 									<p className="mt-1 text-subtle-medium text-gray-1">
-										{comments.length} repl{comments.length > 1 ? "ies" : "y"}
+										{comments.length} {comments.length === 1 ? "reply" : "replies"}
 									</p>
 								</Link>
 							)}
 						</div>
 					</div>
 				</div>
-
 				<DeleteThread
 					threadId={JSON.stringify(id)}
 					currentUserId={currentUserId}
@@ -123,10 +140,9 @@ const ThreadCard = ({
 					isComment={isComment}
 				/>
 			</div>
-
-			{isComment && comments.length > 0 && (
+			{!isComment && comments.length > 0 && (
 				<div className="ml-1 mt-3 flex items-center gap-2">
-					{comments.slice(0, 2).map((comment, index) => (
+					{comments.slice(0, 3).map((comment, index) => (
 						<Image
 							key={index}
 							src={comment.author.image}
@@ -136,31 +152,30 @@ const ThreadCard = ({
 							className={`${index !== 0 && "-ml-5"} rounded-full object-cover`}
 						/>
 					))}
-					<Link href={`/threads/${id}`}>
+					<Link href={`/thread/${id}`}>
 						<p className="mt-1 text-subtle-medium text-gray-1">
-							{comments.length} repl{comments.length > 1 ? "ies" : "y"}
+							{comments.length} {comments.length === 1 ? "reply" : "replies"}
 						</p>
 					</Link>
 				</div>
 			)}
 
 			{!isComment && community && (
-				<Link href={`/community/${community.id}`} className="mt-5 flex items-center">
+				<Link href={`/communities/${community.id}`} className="mt-5 flex items-center">
 					<p className="text-subtle-medium text-gray-1">
-						{formatDateString(createdAt)}
-						{community && `- ${community.name} Community`}
+						{formatDateString(createdAt)} - {community.name} Community
 					</p>
-
 					<Image
 						src={community.image}
 						alt={community.name}
 						width={14}
 						height={14}
-						className="ml-1 object-cover rounded-full"
+						className="ml-1 rounded-full object-cover"
 					/>
 				</Link>
 			)}
 		</article>
 	);
 };
+
 export default ThreadCard;

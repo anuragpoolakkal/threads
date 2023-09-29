@@ -2,11 +2,12 @@
 
 import { FilterQuery, SortOrder } from "mongoose";
 
-import Community from "../models/community.model";
-import Thread from "../models/thread.model";
-import User from "../models/user.model";
+import Community from "@/lib/models/community.model";
+import Thread from "@/lib/models/thread.model";
+import User from "@/lib/models/user.model";
 
 import { connectToDB } from "../mongoose";
+import Like from "../models/like.model";
 
 export async function createCommunity(
 	id: string,
@@ -74,26 +75,33 @@ export async function fetchCommunityPosts(id: string) {
 	try {
 		connectToDB();
 
-		const communityPosts = await Community.findById(id).populate({
-			path: "threads",
-			model: Thread,
-			populate: [
-				{
-					path: "author",
-					model: User,
-					select: "name image id", // Select the "name" and "_id" fields from the "User" model
-				},
-				{
-					path: "children",
-					model: Thread,
-					populate: {
+		const communityPosts = await Community.findById(id)
+			.populate({
+				path: "threads",
+				model: Thread,
+				populate: [
+					{
 						path: "author",
 						model: User,
-						select: "image _id", // Select the "name" and "_id" fields from the "User" model
+						select: "name image id", // Select the "name" and "_id" fields from the "User" model
 					},
-				},
-			],
-		});
+					{
+						path: "children",
+						model: Thread,
+						populate: {
+							path: "author",
+							model: User,
+							select: "image _id", // Select the "name" and "_id" fields from the "User" model
+						},
+					},
+					{
+						path: "likes",
+						model: Like,
+						select: "_id user thread liked",
+					},
+				],
+			})
+			.exec();
 
 		return communityPosts;
 	} catch (error) {

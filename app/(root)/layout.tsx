@@ -28,7 +28,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				</head>
 				<body className={inter.className}>
 					<Topbar />
-
 					<main className="flex flex-row">
 						<LeftSidebar />
 						<section className="main-container">
@@ -36,7 +35,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						</section>
 						<RightSidebar />
 					</main>
-
 					<Bottombar />
 				</body>
 			</html>

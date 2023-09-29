@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
-import Community from "../models/community.model";
 import Thread from "../models/thread.model";
-import page from "@/app/(auth)/onboarding/page";
+import Community from "../models/community.model";
 import { FilterQuery, SortOrder } from "mongoose";
+import Like from "../models/like.model";
 
 interface Params {
 	userId: string;
@@ -17,17 +17,25 @@ interface Params {
 	path: string;
 }
 
-export async function updateUser({ userId, bio, name, path, username, image }: Params): Promise<void> {
+export async function updateUser({ userId, username, name, bio, image, path }: Params): Promise<void> {
 	try {
-		await connectToDB();
+		connectToDB();
 
 		await User.findOneAndUpdate(
 			{ id: userId },
-			{ username: username.toLowerCase(), name, bio, image, onboarded: true },
+			{
+				username: username.toLowerCase(),
+				name,
+				bio,
+				image,
+				onboarded: true,
+			},
+			// upsert means both updating and inserting
 			{ upsert: true }
 		);
 
 		if (path === "/profile/edit") {
+			// revalidatePath allows you to revalidate data associated with a specific path. This is useful for scenarios where you want to update your cached data without waiting for a revalidation period to expire.
 			revalidatePath(path);
 		}
 	} catch (error: any) {
@@ -39,7 +47,13 @@ export async function fetchUser(userId: string) {
 	try {
 		connectToDB();
 
-		return await User.findOne({ id: userId }).populate({ path: "communities", model: Community });
+		return await User.findOne({ id: userId }).populate({
+			path: "communities",
+			populate: {
+				path: "community",
+				model: Community,
+			},
+		});
 	} catch (error: any) {
 		throw new Error(`Failed to fetch user: ${error.message}`);
 	}
@@ -49,32 +63,86 @@ export async function fetchUserPosts(userId: string) {
 	try {
 		connectToDB();
 
-		const threads = await User.findOne({ id: userId }).populate({
-			path: "threads",
-			model: Thread,
-			populate: [
-				{
-					path: "community",
-					model: Community,
-					select: "name id image _id",
-				},
-				{
-					path: "children",
-					model: Thread,
-					populate: {
-						path: "author",
-						model: User,
-						select: "name image id",
+		const threads = await User.findOne({ id: userId })
+			.populate({
+				path: "threads",
+				model: Thread,
+				populate: [
+					{
+						path: "community",
+						model: Community,
+						select: "_id id name image",
 					},
-				},
-			],
-		});
+					{
+						path: "children",
+						model: Thread,
+						populate: {
+							path: "author",
+							model: User,
+							select: "name image id",
+						},
+					},
+					{
+						path: "likes",
+						model: Like,
+						select: "_id user thread liked",
+					},
+				],
+			})
+			.exec();
 
 		return threads;
 	} catch (error: any) {
-		console.error("Error fetching user threads", error);
-		throw error;
+		throw new Error(`Failed to fetch user posts: ${error.message}`);
 	}
+}
+
+export async function fetchUserReplies(userId: string) {
+	try {
+		connectToDB();
+
+		const user = await User.findOne({ id: userId });
+
+		const userThreads = await Thread.find({ author: user._id });
+
+		const childThreadIds = userThreads.reduce((acc, thread) => {
+			return acc.concat(thread.children);
+		}, []);
+
+		const replies = await Thread.find({
+			_id: { $in: childThreadIds },
+			author: { $ne: user._id },
+		})
+			.populate({ path: "author", model: User })
+			.populate({ path: "community", model: Community })
+			.populate({
+				path: "children",
+				populate: {
+					path: "author",
+					model: User,
+					select: "_id name parentId image",
+				},
+			})
+			.populate({ path: "likes", model: Like, select: "_id user thread liked" })
+			.exec();
+
+		const totalRepliesCount = await Thread.countDocuments({
+			_id: { $in: childThreadIds },
+			author: { $ne: user._id },
+		});
+
+		return { replies, totalRepliesCount };
+	} catch (error: any) {
+		throw new Error(`Failed to fetch user replies: ${error.message}`);
+	}
+}
+
+interface FetchUsersParams {
+	userId: string;
+	searchString?: string;
+	pageNumber?: number;
+	pageSize?: number;
+	sortBy?: SortOrder;
 }
 
 export async function fetchUsers({
@@ -83,21 +151,17 @@ export async function fetchUsers({
 	pageNumber = 1,
 	pageSize = 20,
 	sortBy = "desc",
-}: {
-	userId: string;
-	searchString?: string;
-	pageNumber?: number;
-	pageSize?: number;
-	sortBy?: SortOrder;
-}) {
+}: FetchUsersParams) {
 	try {
 		connectToDB();
 
-		const skipAmount = (pageNumber - 1) * pageNumber;
+		const skipAmount = (pageNumber - 1) * pageSize;
 
 		const regex = new RegExp(searchString, "i");
 
-		const query: FilterQuery<typeof User> = { id: { $ne: userId } };
+		const query: FilterQuery<typeof User> = {
+			id: { $ne: userId },
+		};
 
 		if (searchString.trim() !== "") {
 			query.$or = [{ username: { $regex: regex } }, { name: { $regex: regex } }];
@@ -112,9 +176,10 @@ export async function fetchUsers({
 		const users = await usersQuery.exec();
 
 		const isNext = totalUsersCount > skipAmount + users.length;
+
 		return { users, isNext };
 	} catch (error: any) {
-		throw new Error(`Failed to fetch new users: ${error.message}`);
+		throw new Error(`Failed to fetch users: ${error.message}`);
 	}
 }
 
@@ -122,27 +187,49 @@ export async function getActivity(userId: string) {
 	try {
 		connectToDB();
 
-		// find all threads created by the user
 		const userThreads = await Thread.find({ author: userId });
 
-		// collect all the child thread ids (replies) from the 'children' field of each user thread
-		const childThreadIds = userThreads.reduce((acc, userThread) => {
-			return acc.concat(userThread.children);
+		const childThreadIds = userThreads.reduce((acc, thread) => {
+			return acc.concat(thread.children);
 		}, []);
 
-		// find and return the child threads (replies) excluding the ones created by the same user
 		const replies = await Thread.find({
 			_id: { $in: childThreadIds },
-			author: { $ne: userId }, // exclude threads authored by the same user
+			author: { $ne: userId },
 		}).populate({
 			path: "author",
 			model: User,
 			select: "name image _id",
 		});
 
-		return replies;
-	} catch (error) {
-		console.error("Error fetching replies: ", error);
-		throw error;
+		const likes = await Like.find({
+			thread: { $in: userThreads },
+			user: { $ne: userId },
+		})
+			.populate({
+				path: "user",
+				model: User,
+				select: "name image _id",
+			})
+			.populate({
+				path: "thread",
+				model: Thread,
+				select: "text parentId",
+				populate: {
+					path: "author",
+					model: User,
+					select: "name image",
+				},
+			});
+
+		// Combine the replies and likes arrays
+		const combinedResults = replies.concat(likes);
+
+		// Sort the combined array by createdAt in descending order
+		combinedResults.sort((a, b) => b.createdAt - a.createdAt);
+
+		return combinedResults.slice(0, 50);
+	} catch (error: any) {
+		throw new Error(`Failed to fetch activity: ${error.message}`);
 	}
 }

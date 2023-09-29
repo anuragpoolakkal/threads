@@ -1,36 +1,45 @@
+import HomeEmpty from "@/components/HomeEmpty";
 import ThreadCard from "@/components/cards/ThreadCard";
-import { fetchPosts } from "@/lib/actions/thread.actions";
+import Pagination from "@/components/shared/Pagination";
+import { fetchThreads } from "@/lib/actions/thread.actions";
+import { fetchUser } from "@/lib/actions/user.actions";
 import { currentUser } from "@clerk/nextjs";
 
-export default async function Home() {
-	const result = await fetchPosts();
+export default async function Home({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
 	const user = await currentUser();
+	if (!user) return <HomeEmpty />;
+
+	const userInfo = await fetchUser(user.id);
+
+	const result = await fetchThreads(searchParams?.page ? +searchParams.page : 1, 30);
 
 	return (
 		<>
 			<h1 className="head-text text-left">Home</h1>
-
 			<section className="mt-9 flex flex-col gap-10">
-				{result.posts.length === 0 ? (
-					<p className="no-result">No threads!</p>
+				{result.threads.length === 0 ? (
+					<p className="no-result">No threads found</p>
 				) : (
 					<>
-						{result.posts.map((post) => (
+						{result.threads.map((thread: any) => (
 							<ThreadCard
-								key={post._id}
-								id={post._id}
-								currentUserId={user?.id || ""}
-								parentId={post.parentid}
-								content={post.text}
-								author={post.author}
-								community={post.community}
-								createdAt={post.createdAt}
-								comments={post.children}
+								key={thread._id}
+								id={thread._id}
+								currentUserId={user.id}
+								userModelId={JSON.stringify(userInfo._id)}
+								parentId={thread.parentId}
+								content={thread.text}
+								likes={thread.likes}
+								author={thread.author}
+								community={thread.community}
+								createdAt={thread.createdAt}
+								comments={thread.children}
 							/>
 						))}
 					</>
 				)}
 			</section>
+			<Pagination path="/" pageNumber={searchParams?.page ? +searchParams.page : 1} isNext={result.isNext} />
 		</>
 	);
 }
