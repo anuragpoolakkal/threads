@@ -13,12 +13,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<ClerkProvider appearance={{ baseTheme: dark }}>
+		<ClerkProvider>
+			{/* <ClerkProvider appearance={{ baseTheme: dark }}> */}
 			<html lang="en">
 				<head>
 					<link rel="icon" type="image/x-icon" href="/threads.png" sizes="any" />
 				</head>
-				<body className={`${inter.className} bg-dark-1`}>{children}</body>
+				<body className={`${inter.className} bg-dark-1`}>
+					<div className="w-full flex justify-center items-center min-h-screen">{children}</div>
+				</body>
 			</html>
 		</ClerkProvider>
 	);
