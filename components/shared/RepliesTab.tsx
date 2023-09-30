@@ -7,10 +7,12 @@ interface Props {
 }
 
 const RepliesTab = async ({ currentUserId, userModelId, replies }: Props) => {
+	const reversedReplies = replies.slice().reverse(); // To show latest reply first in the profile page
+
 	return (
 		<section className="mt-9 flex flex-col gap-10">
 			{replies.length > 0 ? (
-				replies.map((thread: any) => (
+				reversedReplies.map((thread: any) => (
 					<ThreadCard
 						key={thread._id}
 						id={thread._id}
