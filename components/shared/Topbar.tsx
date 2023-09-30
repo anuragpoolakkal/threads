@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { SignOutButton, SignedIn, OrganizationSwitcher } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const Topbar = () => {
+	const router = useRouter();
+
 	return (
 		<nav className="topbar">
 			<Link href="/" className="flex items-center gap-4">
@@ -13,7 +18,7 @@ const Topbar = () => {
 			<div className="flex items-center gap-4">
 				<div className="block md:hidden">
 					<SignedIn>
-						<SignOutButton>
+						<SignOutButton signOutCallback={() => router.push("/")}>
 							<div className="flex cursor-pointer">
 								<Image src="/logout.svg" alt="logout" width={24} height={24} />
 							</div>

@@ -19,12 +19,14 @@ const ThreadsTab = async ({ currentUserId, accountId, userModelId, accountType }
 		result = await fetchUserPosts(accountId);
 	}
 
+	const reversedThreads = result.threads.slice().reverse(); // To show latest thread first in the profile page
+
 	if (!result) return redirect("/");
 
 	return (
 		<section className="mt-9 flex flex-col gap-10">
-			{result.threads.length > 0 ? (
-				result.threads.map((thread: any) => (
+			{reversedThreads.length > 0 ? (
+				reversedThreads.map((thread: any) => (
 					<ThreadCard
 						key={thread._id}
 						id={thread._id}
