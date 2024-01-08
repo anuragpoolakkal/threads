@@ -118,12 +118,14 @@ const ThreadCard = ({
 									title="Share"
 								/>
 							</div>
+							{/* Date and time of post */}
+							{formatDateString(createdAt)}
+							{/* Number of likes */}
 							{numberLiked > 0 && (
 								<p className="mt-1 text-subtle-medium text-gray-1">
-									{numberLiked} {numberLiked === 1 ? "like" : "likes"}
+									{" • "} {numberLiked} {numberLiked === 1 ? "like" : "likes"}
 								</p>
 							)}
-
 							{isComment && comments.length > 0 && (
 								<Link href={`/thread/${id}`}>
 									<p className="mt-1 text-subtle-medium text-gray-1">
